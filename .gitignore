@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+
+# Distribution / packaging
+.Python
+
+.idea/
+saved_modelfile/
+model_file/
+result/
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+

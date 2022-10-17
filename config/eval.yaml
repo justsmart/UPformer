@@ -1,0 +1,6 @@
+Eval:
+  gt_root: "../dataset/TestDataset"
+  pred_root: "/home/liucl/PycharmProjects/nosupAD/UGTR-MI/result/2022-07-05/pred"
+  result_path: "/home/liucl/PycharmProjects/nosupAD/UGTR-MI/result/2022-07-05/pred"
+  dataset:
+  metrics: ['meanDic', 'meanIoU', 'wFm', 'Sm', 'meanEm', 'maxEm', 'mae', 'maxDic', 'maxIoU', 'meanSen', 'maxSen', 'meanSpe', 'maxSpe']
