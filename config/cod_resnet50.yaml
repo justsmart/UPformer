@@ -1,8 +1,8 @@
 DATA:
-  test_root:  ../indusData/TestDataset #../indusData/TestDataset  dataset
+  test_root:  ../indusData/TestDataset #../indusData/TestDataset  or dataset/TestDataset
   train_root: ../indusData/TrainDataset
   train_list: ./data/train.list
-  val_list:   ./data/CVC-ClinicDB-test.list
+  #val_list:   ./data/CVC-ClinicDB-test.list
   classes: 1
   new: True
 TRAIN:
@@ -10,7 +10,7 @@ TRAIN:
   mode: #cluster  # clustering before training
   threads: 4  
   cacheBatchSize: 16
-  arch: ugtr
+  arch: UPformer
   layers: 50
   sync_bn: True  # adopt sync_bn or not
   train_h: 353
@@ -25,7 +25,7 @@ TRAIN:
   train_gpu: [1]
   workers: 4  # data loader workers
   batch_size: 8 #12  # batch size for training
-  batch_size_val: 36  # batch size for validation during training, memory and speed tradeoff
+  batch_size_val: 36  # no usage
   base_lr: 0.01   #0.01 for poloy 0.001 for indus
   epochs: 1000 #500 #200 #50
   start_epoch: 0
@@ -35,15 +35,15 @@ TRAIN:
   manual_seed:
   print_freq: 20
   save_freq: 100
-  save_path: model_file2
+  save_path: model_file 
   weight:  pre_trained/resnet50_v1.pth
   resume:
   evaluate:  True #False  # evaluate on validation set, extra gpu memory needed and small batch_size_val is recommend
 
-Distributed:
+Distributed: # Distributed is unavailable
   dist_url: tcp://127.0.0.1:6789
   dist_backend: 'nccl'
-  multiprocessing_distributed: False
+  multiprocessing_distributed: False # Distributed is unavailable, set false
   world_size: 1
   rank: 0
   use_apex: False
@@ -52,10 +52,7 @@ Distributed:
   loss_scale:
 
 TEST:
-  test_list:  /home/liucl/PycharmProjects/nosupAD/UGTR-MI/data/test.list
-  #test_list: /raid/workspace/loc_toy/dataset/cod/CAMO_test/test.lst
-  #test_list: /raid/workspace/loc_toy/dataset/cod/CHAMELEON/test.lst
-  #test_list: /raid/workspace/loc_toy/dataset/cod/NC4K/test.lst
+  test_list:  ../data/test.list
   split: test  # split in [train, val and test]
   base_size: 353  # based size for scaling
   test_h: 353
@@ -66,7 +63,6 @@ TEST:
   index_start: 0  # evaluation start index in list
   index_step: 0  # evaluation step index in list, 0 means to end
   test_gpu: [1]
-  model_root:  /home/liucl/PycharmProjects/nosupAD/UGTR-MI/saved_modelfile/indus1000-new
+  model_root:  /home/liucl/PycharmProjects/nosupAD/UPformer/saved_modelfile/indus1000-new
   save_folder: ./result/  # results save folder
-  colors_path: data/voc2012/voc2012_colors.txt  # path of dataset colors
-  names_path: data/voc2012/voc2012_names.txt  # path of dataset category names
+

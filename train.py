@@ -40,10 +40,12 @@ def get_parser():
     parser.add_argument('--config', type=str, default='config/cod_resnet50.yaml', help='config file')
     parser.add_argument('opts', help='see config/cod_resnet50.yaml for all options', default=None, nargs=argparse.REMAINDER)
     args = parser.parse_args()
+    
     assert args.config is not None
     cfg = config.load_cfg_from_cfg_file(args.config)
     if args.opts is not None:
         cfg = config.merge_cfg_from_list(cfg, args.opts)
+    print(cfg.arch)
     return cfg
 
 
@@ -69,7 +71,7 @@ def main_process():
 def check(args):
     assert args.classes == 1
     assert args.zoom_factor in [1, 2, 4, 8]
-    if args.arch == 'ugtr':
+    if args.arch == 'UPformer':
         assert (args.train_h - 1) % 8 == 0 and (args.train_w - 1) % 8 == 0
     else:
         raise Exception('architecture not supported yet'.format(args.arch))
@@ -81,11 +83,8 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in args.train_gpu)
     print(args.save_folder)
     if args.new == True:
-        from model.ugtr_new import UGTRNet
+        from UPformer.model.UPformer import Net
         print('model new!')
-    else:
-        from model.ugtr_ori import UGTRNet
-        print('model ori!')
     save_folder = os.path.join(args.save_folder,'tmp')
     gray_folder = os.path.join(save_folder, 'gray')
     check_makedirs(save_folder)
@@ -112,10 +111,10 @@ def main():
         mp.spawn(main_worker, nprocs=args.ngpus_per_node, args=(args.ngpus_per_node, args, gray_folder))
     else:
         
-        main_worker(args.train_gpu, args.ngpus_per_node, args, gray_folder,UGTRNet)
+        main_worker(args.train_gpu, args.ngpus_per_node, args, gray_folder,Net)
 
 
-def main_worker(gpu, ngpus_per_node, argss, gray_folder,UGTRNet):
+def main_worker(gpu, ngpus_per_node, argss, gray_folder,Net):
     
     global args
     args = argss
@@ -137,9 +136,9 @@ def main_worker(gpu, ngpus_per_node, argss, gray_folder,UGTRNet):
     # criterion = nn.CrossEntropyLoss(ignore_index=args.ignore_label)
     #criterion = structure_loss
     criterion = nn.BCEWithLogitsLoss(reduction='mean')
-    if args.arch == 'ugtr':
+    if args.arch == 'UPformer':
         
-        model = UGTRNet(layers=args.layers, classes=args.classes, zoom_factor=args.zoom_factor, criterion=criterion,T=16,K=50, BatchNorm=BatchNorm, pretrained=False, dataset_name='COD10K', args=args)
+        model = Net(layers=args.layers, classes=args.classes, zoom_factor=args.zoom_factor, criterion=criterion,T=16,K=50, BatchNorm=BatchNorm, pretrained=False, dataset_name='COD10K', args=args)
 
         modules_ori = [model.layer0, model.layer1, model.layer2, model.layer3, model.layer4]
         modules_new = [model.input_proj, model.position_encoding, model.transformer, model.pred]
@@ -213,38 +212,11 @@ def main_worker(gpu, ngpus_per_node, argss, gray_folder,UGTRNet):
     std = [0.229, 0.224, 0.225]
     std = [item * value_scale for item in std]
     
-    # train_transform = transform.Compose([
-    #     transform.Resize((args.train_h, args.train_w)),
-    #     #transform.RandScale([args.scale_min, args.scale_max]),
-    #     #transform.RandomEqualizeHist(),
-    #     transform.RandRotate([args.rotate_min, args.rotate_max], padding=mean, ignore_label=args.ignore_label),
-    #     transform.RandomGaussianBlur(),
-    #     transform.RandomHorizontalFlip(),
-    #     transform.RandomVerticalFlip(),
-    #     #transform.Crop([args.train_h, args.train_w], crop_type='rand', padding=mean, ignore_label=args.ignore_label),
-    #     transform.ToTensor(),
-    #     transform.Normalize(mean=mean, std=std)])
-    # train_data = dataset.SemData(split='train', data_root=args.data_root, data_list=args.train_list, transform=train_transform)
-    # if args.distributed:
-    #     train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
-    # else:
-    #     train_sampler = None
-    # train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=(train_sampler is None), num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
 
     train_loader = get_loader(f'{args.train_root}/images/',f'{args.train_root}/masks/',args.batch_size,args.train_h,shuffle=True, num_workers=4, pin_memory=True, augmentation=True,train=True)
     
 
-        # val_transform = transform.Compose([
-        #     transform.Resize((args.train_h, args.train_w)),
-        #     transform.ToTensor(),
-        #     transform.Normalize(mean=mean, std=std)])
-        # val_data = dataset.SemData(split='val', data_root=args.data_root, data_list=args.val_list, transform=val_transform)
-        # if args.distributed:
-        #     val_sampler = torch.utils.data.distributed.DistributedSampler(val_data)
-        # else:
-        #     val_sampler = None
-        # val_loader = torch.utils.data.DataLoader(val_data, batch_size=args.batch_size_val, shuffle=False, num_workers=args.workers, pin_memory=True, sampler=val_sampler)
-
+    
 
     date_str = str(datetime.datetime.now().date())
     check_makedirs(args.save_path + '/' + date_str)

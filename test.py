@@ -25,9 +25,10 @@ cv2.ocl.setUseOpenCL(False)
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch Semantic Segmentation')
-    parser.add_argument('--config', type=str, default='config/cod_resnet50.yaml', help='config file')
+    parser.add_argument('--config', type=str, default='./config/cod_resnet50.yaml', help='config file')
     parser.add_argument('opts', help='see config/cod_resnet50.yaml for all options', default=None, nargs=argparse.REMAINDER)
     args = parser.parse_args()
+
     assert args.config is not None
     cfg = config.load_cfg_from_cfg_file(args.config)
     if args.opts is not None:
@@ -50,7 +51,7 @@ def check(args):
     assert args.classes == 1
     assert args.zoom_factor in [1, 2, 4, 8]
     assert args.split in ['train', 'val', 'test']
-    if args.arch == 'ugtr':
+    if args.arch == 'UPformer':
         assert (args.train_h - 1) % 8 == 0 and (args.train_w - 1) % 8 == 0
     else:
         raise Exception('architecture not supported yet'.format(args.arch))
@@ -76,33 +77,17 @@ def main():
     save_folder = args.save_folder + '/' + date_str
     check_makedirs(save_folder)
     if args.new == True:
-        from model.ugtr_new import UGTRNet
+        from model.UPformer import Net
         print('model new!')
-    else:
-        from model.ugtr_ori import UGTRNet
-        print('model ori!')
 
-    # test_transform = transform.Compose([
-    #          transform.Resize((args.test_h, args.test_w)),
-    #          transform.ToTensor(),
-    #           transform.Normalize(mean=mean, std=std)])
 
-    # test_data = dataset.SemData(split=args.split, data_root=args.data_root, data_list=args.test_list, transform=test_transform)
-    
-    # index_start = args.index_start
-    # if args.index_step == 0:
-    #     index_end = len(test_data.data_list)
-    # else:
-    #     index_end = min(index_start + args.index_step, len(test_data.data_list))
-    # data_list = test_data.data_list[index_start:index_end]
-    # test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.test_batch_size, shuffle=False, num_workers=args.workers, pin_memory=True)
     test_names=[]
     for test_dir in os.listdir(args.test_root):
         if test_dir != '':
             test_names.append(test_dir)
     results = {}
 
-    model = UGTRNet(layers=args.layers, classes=args.classes, zoom_factor=args.zoom_factor, pretrained=False, args=args,T=16,K=50)
+    model = Net(layers=args.layers, classes=args.classes, zoom_factor=args.zoom_factor, pretrained=False, args=args,T=16,K=50)
     #logger.info(model)
     model = torch.nn.DataParallel(model).cuda()
     cudnn.benchmark = True
@@ -133,8 +118,7 @@ def main():
         test_loader = get_loader(f'{args.test_root}/{test_data_name}/images',f'{args.test_root}/{test_data_name}/masks', 1,
                             args.train_h, shuffle=False, num_workers=0, pin_memory=True, augmentation=False,train=False)
 
-        colors = np.loadtxt(args.colors_path).astype('uint8')
-        names = [line.rstrip('\n') for line in open(args.names_path)]
+
         gray_folder = os.path.join(save_folder, 'pred',test_data_name)
         
         
@@ -173,12 +157,7 @@ def test(test_loader, model, gray_folder):
             vis_att = F.interpolate(vis_att, size=target.size()[2:], mode='bilinear', align_corners=True)
             vis_att = vis_att.detach().cpu().numpy()
             
-        # P_b = F.interpolate(P_b, size=target.size()[2:], mode='bilinear', align_corners=True)
-        # P_b = P_b.detach().cpu().numpy()
-        # P_b = (P_b - P_b.min()) / (P_b.max() - P_b.min())
-        # P_f = F.interpolate(P_f, size=target.size()[2:], mode='bilinear', align_corners=True)
-        # P_f = P_f.detach().cpu().numpy()
-        # P_f = (P_f - P_f.min()) / (P_f.max() - P_f.min())
+
         mean = F.interpolate(mean, size=target.size()[2:], mode='bilinear', align_corners=True)
         mean = mean.detach().cpu().numpy()
         mean = (mean - mean.min()) / (mean.max() - mean.min())
@@ -191,45 +170,8 @@ def test(test_loader, model, gray_folder):
         for j in range(len(pred)):
             dice.update(calc_dic(pred[j],target[j]))
             mae.update(calc_mae(pred[j],target[j]))
-            pred_j = np.uint8(pred[j]*255)
-            target_j = np.uint8(target[j]*255)
-            # if pred_j is not None:
-            ori_img = image_BGR[j].numpy()
-            heatmap = cv2.applyColorMap(target_j.transpose(1,2,0), cv2.COLORMAP_JET)
-            img_path = os.path.join(gray_folder, image_name[0] + '.png')
-            add_img = cv2.addWeighted(ori_img, 0.7, heatmap, 0.5, 0)
-            cv2.imwrite(img_path,pred_j.transpose(1,2,0))
-            # cv2.imwrite(img_path, add_img)
-        if mean is not None and uncertainty is not None:
-            for j in range(len(mean)):
-                mean_j = np.uint8(mean[j]*255)
-                uncertainty_j = np.uint8(uncertainty[j]*255)
 
-                img_path = os.path.join(gray_folder, image_name[0] + '_mean.png')
-                # cv2.imwrite(img_path,mean_j.transpose(1,2,0))
-                img_path = os.path.join(gray_folder, image_name[0] + '_un.png')
-                heatmap = cv2.applyColorMap(uncertainty_j.transpose(1, 2, 0), cv2.COLORMAP_JET)
-                # add_img = cv2.addWeighted(ori_img, 0.7, heatmap, 0.5, 0)
-                # cv2.imwrite(img_path,heatmap)
-        if vis_att is not None:
-            for j in range(len(vis_att)):
-                vis_att_j=vis_att[j]
-                
-                ori_img=image_BGR[j].numpy()
-
-                for k in range(len(vis_att_j)):
-                    vis_att_gray=vis_att_j[k] # (1, h, w)
-                    vis_att_gray = (vis_att_gray - vis_att_gray.min()) / (vis_att_gray.max() - vis_att_gray.min())
-                    # vis_att_gray = np.uint8(vis_att_gray*255)
-                    vis_att_gray = torch.from_numpy(np.uint8(vis_att_gray * 255)).unsqueeze(0).numpy()
-                    img_path = os.path.join(gray_folder, image_name[j] + '_{}.png'.format(k))
-                    
-                    # print(ori_img.shape,heatmap.shape)
-                    heatmap = cv2.applyColorMap(vis_att_gray.transpose(1,2,0), cv2.COLORMAP_JET)
-                    add_img = cv2.addWeighted(ori_img, 0.7, heatmap, 0.5, 0)
-                    # print(heatmap.shape,heatmap)
-                    # cv2.imwrite(img_path,vis_att_gray.transpose(1,2,0))
-                    cv2.imwrite(img_path, add_img)
+        
         # if ((i + 1) % 30 == 0) or (i + 1 == len(test_loader)):
         #     logger.info('Test: [{}/{}] '.format(i + 1, len(test_loader)))
         
