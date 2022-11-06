@@ -10,7 +10,6 @@ import os
 import numpy as np
 from model.position_encoding import build_position_encoding
 from model.transformer import build_transformer
-from model.pmm import PMMs
 import torchvision
 from util.util import mask_from_tensor
 from model.decoder import predBlock1
@@ -72,7 +71,7 @@ class Net(nn.Module):
         self.input_proj = nn.Sequential(nn.Conv2d(2048, self.hidden_dim, kernel_size=1, bias=False),
                                         BatchNorm(self.hidden_dim), nn.ReLU(inplace=True), nn.Dropout2d(p=dropout))
         self.T =T
-        # self.pmm = PMMs(self.hidden_dim, T)
+
         self.position_encoding = build_position_encoding(self.hidden_dim, 'v2')
 
         self.transformer = build_transformer(self.hidden_dim, dropout, nheads=8, dim_feedforward=2048, enc_layers=3,
@@ -83,11 +82,6 @@ class Net(nn.Module):
         self.std_conv = nn.Conv2d(self.hidden_dim, 1, kernel_size=1, bias=False)
         # self.res50toout =
         self.pred = nn.Conv2d(self.hidden_dim, 1, kernel_size=1)
-        # self.pred3 = nn.Conv2d(self.hidden_dim * 2, 3, kernel_size=1)
-        # self.decoder1 = predBlock1(self.hidden_dim, self.hidden_dim)
-        # self.decoder2 = predBlock1(self.hidden_dim, self.hidden_dim // 2)
-        # self.decoder3 = predBlock1(self.hidden_dim // 2, self.hidden_dim // 4)
-        # self.decoder4 = predBlock1(self.hidden_dim // 4, 3)
         self.kl_loss = nn.KLDivLoss(reduction='mean')
         self.K = K
         self.m_items = F.normalize(torch.rand((16, self.hidden_dim), dtype=torch.float),
@@ -185,21 +179,11 @@ class Net(nn.Module):
 
         #
 
-        # elif x.size(1) == 3:
-        #     # x = self.decoder1(x) #out:[1, 1, 60, 60] # ori
-        #     # x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
-        #     # x = self.decoder2(x)
-        #     # x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
-        #     # x = self.decoder3(x)
-        #     # x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
-        #     # x = self.decoder4(x)
-        #     x = self.pred3(x)
         if self.zoom_factor != 1:
             prob_x = F.interpolate(prob_x, size=(h, w), mode='bilinear', align_corners=True)
             x = F.interpolate(x, size=(h, w), mode='bilinear', align_corners=True)
             mean3 = F.interpolate(mean3, size=(h, w), mode='bilinear', align_corners=True)
             std3 = F.interpolate(std3, size=(h, w), mode='bilinear', align_corners=True)
-            # uncertainty = F.interpolate(uncertainty, size=(h, w), mode='bilinear', align_corners=True)
 
         assert torch.sum(torch.isnan(prob_x)).item() == 0
         assert torch.sum(torch.isinf(prob_x)).item() == 0
