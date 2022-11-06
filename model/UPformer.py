@@ -9,7 +9,7 @@ import os
 # import h5py
 import numpy as np
 from model.position_encoding import build_position_encoding
-from model.transformer_ori import build_transformer
+from model.transformer import build_transformer
 from model.pmm import PMMs
 import torchvision
 from util.util import mask_from_tensor
@@ -155,10 +155,8 @@ class Net(nn.Module):
         x, mask = mask_from_tensor(x)
 
         position_encoding = self.position_encoding(x, mask).to(x.device)
-
         x = x + position_encoding
-        # x, z_, P_b, P_f = self.pmm(x)  # out z:[1, 2025, 16]
-        # x = torch.stack(x, dim=3).squeeze(-1)  # out x :[1, 512, 1, 16])
+
         x, self.m_items, softmax_score_query, softmax_score_memory, gathering_loss, spreading_loss = self.memory(x, self.m_items,
             train=self.train)  # [8, 512, 4, 4] for updated_fea, torch.Size([16, 512]) for updated_memory
         # print(x.shape)
