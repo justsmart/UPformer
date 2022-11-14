@@ -21,8 +21,8 @@ from PIL import Image
 import shutil
 
 import datetime
-from util.dataloader import get_loader,test_dataset
-from util import dataset, transform, config
+from util.dataloader import get_loader
+from util import  transform, config
 from util.util import AverageMeter, poly_learning_rate, calc_mae, check_makedirs,calc_dic
 from  torch.optim.lr_scheduler import StepLR, CosineAnnealingWarmRestarts, CosineAnnealingLR
 cv2.ocl.setUseOpenCL(False)

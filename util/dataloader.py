@@ -70,7 +70,7 @@ class PolypDataset(data.Dataset):
         gt = self.binary_loader(self.gts[index])
         image_BGR = self.bgr_loader(self.images[index])
         
-        seed = np.random.randint(2147483647) # make a seed with numpy generator 
+        seed = np.random.randint(1234) # make a seed with numpy generator 
         random.seed(seed) # apply this seed to img tranfsorms
         torch.manual_seed(seed) # needed for torchvision 0.7
         if self.img_transform is not None:

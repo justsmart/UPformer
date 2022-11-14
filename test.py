@@ -11,7 +11,7 @@ import torch.nn.functional as F
 import torch.nn.parallel
 import torch.utils.data
 
-from util import dataset, transform, config
+from util import transform, config
 from util.util import AverageMeter, intersectionAndUnion, check_makedirs, colorize, calc_mae, check_makedirs,calc_dic
 import pdb
 from util.dataloader import get_loader
