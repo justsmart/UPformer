@@ -112,6 +112,8 @@ def main():
         #
             model.load_state_dict(checkpoint['state_dict'], strict=False)
             logger.info("=> loaded checkpoint '{}', epoch {}".format(model_path, checkpoint['epoch']))
+            total = sum([param.nelement() for param in model.parameters()])
+            print("Number of parameter: %.2fM" % (total/1e6))
         else:
             raise RuntimeError("=> no checkpoint found at '{}'".format(model_path))
         ######
@@ -139,10 +141,11 @@ def test(test_loader, model, gray_folder):
     dice = AverageMeter()
     model.eval()
     end = time.time()
+    total_sum = 0
     check_makedirs(gray_folder)
     for i, (input,target,image_name,image_BGR) in enumerate(test_loader):
         input = input.cuda(non_blocking=True)
-        
+        total_sum +=input.size(0)
         with torch.no_grad():
             pred, uncertainty, mean,vis_att = model(input)
             
@@ -176,7 +179,7 @@ def test(test_loader, model, gray_folder):
         #     logger.info('Test: [{}/{}] '.format(i + 1, len(test_loader)))
         
         # time.sleep(3)     
-    
+    logger.info('FPS:{:.4f}'.format(total_sum/(time.time()-end)))
         
         # cv2.imwrite(gray_path, gray)
     logger.info('val result: mae: {:.7f} // dice: {:.7f}'.format(mae.avg, dice.avg))

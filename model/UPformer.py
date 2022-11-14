@@ -109,7 +109,7 @@ class Net(nn.Module):
         h = int((x_size[2] - 1) / 8 * self.zoom_factor + 1)
         w = int((x_size[3] - 1) / 8 * self.zoom_factor + 1)
 
-        # step1. backbone feature
+        # step1. backbone feature extract
         x = self.layer0(x)
         x = self.layer1(x)
         x = self.layer2(x)
@@ -166,7 +166,7 @@ class Net(nn.Module):
         vis_att = vis_att.view(vis_att_size[0], vis_att_size[1], int(vis_att_size[2] ** 0.5),
                                int(vis_att_size[2] ** 0.5))
         # '''
-        ################# just UQN: mask transformer ,this not use transformer
+        ################# mask transformer ,this not use transformer
         # x = residual
         # vis_att = None
         # t_loss = 0
@@ -201,7 +201,7 @@ class Net(nn.Module):
 
             # print(BCE_loss.item(),prob_loss.item(),gathering_loss.item(),spreading_loss.item(),KL_loss.item())
             main_loss = BCE_loss + 0.5 * prob_loss + 0.5 * (gathering_loss+spreading_loss) +0.5 * t_loss+ 0.5 * KL_loss
-            # print(BCE_loss.item(),prob_loss.item(),t_loss.item(),KL_loss.item())
+
             return torch.sigmoid(x), main_loss
         else:
             return torch.sigmoid(x), ((std3 - std3.min()) / (std3.max() - std3.min())), mean3, vis_att  # , uncertainty
