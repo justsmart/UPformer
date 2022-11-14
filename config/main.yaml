@@ -1,8 +1,6 @@
 DATA:
   test_root:  ../indusData/TestDataset #../indusData/TestDataset  or dataset/TestDataset
   train_root: ../indusData/TrainDataset
-  train_list: ./data/train.list
-  #val_list:   ./data/CVC-ClinicDB-test.list
   classes: 1
   new: True
 TRAIN:

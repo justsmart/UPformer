@@ -25,8 +25,8 @@ cv2.ocl.setUseOpenCL(False)
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch Semantic Segmentation')
-    parser.add_argument('--config', type=str, default='./config/cod_resnet50.yaml', help='config file')
-    parser.add_argument('opts', help='see config/cod_resnet50.yaml for all options', default=None, nargs=argparse.REMAINDER)
+    parser.add_argument('--config', type=str, default='./config/main.yaml', help='config file')
+    parser.add_argument('opts', help='see config/main.yaml for all options', default=None, nargs=argparse.REMAINDER)
     args = parser.parse_args()
 
     assert args.config is not None
@@ -112,8 +112,8 @@ def main():
         #
             model.load_state_dict(checkpoint['state_dict'], strict=False)
             logger.info("=> loaded checkpoint '{}', epoch {}".format(model_path, checkpoint['epoch']))
-            total = sum([param.nelement() for param in model.parameters()])
-            print("Number of parameter: %.2fM" % (total/1e6))
+            # total = sum([param.nelement() for param in model.parameters()])
+            # print("Number of parameter: %.2fM" % (total/1e6))
         else:
             raise RuntimeError("=> no checkpoint found at '{}'".format(model_path))
         ######

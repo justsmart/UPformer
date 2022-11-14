@@ -22,14 +22,8 @@ def PositionalEncoding(d_model, max_len=10000):
     div_term = torch.exp(torch.arange(0, d_model, 2) * -(math.log(10000.0) / d_model))
     pe[:, 0::2] = torch.sin(position * div_term)
     pe[:, 1::2] = torch.cos(position * div_term)
-
-    # 此时pe[max_len,d_model]
-    # embedding三维(可以是[batch_size,vocab,d_model])#vocab就是max_len
-    # 将pe升起一个维度扩充成三维张量
     pe = pe.unsqueeze(0)
 
-    # 位置编码矩阵注册成模型的buffer，它不是模型中的参数，不会跟随优化器进行优化
-    # 注册成buffer后我们就可以在模型的保存和加载时，将这个位置编码器和模型参数加载进来
     return nn.Parameter(pe, requires_grad=False)
 class Net(nn.Module):
     def __init__(self, layers=50, bins=(1, 2, 3, 6), dropout=0.1, T=16, K=50, classes=2, zoom_factor=8, use_ppm=True,

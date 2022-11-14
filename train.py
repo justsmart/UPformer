@@ -37,8 +37,8 @@ import math
 
 def get_parser():
     parser = argparse.ArgumentParser(description='PyTorch Semantic Segmentation')
-    parser.add_argument('--config', type=str, default='config/cod_resnet50.yaml', help='config file')
-    parser.add_argument('opts', help='see config/cod_resnet50.yaml for all options', default=None, nargs=argparse.REMAINDER)
+    parser.add_argument('--config', type=str, default='config/main.yaml', help='config file')
+    parser.add_argument('opts', help='see config/main.yaml for all options', default=None, nargs=argparse.REMAINDER)
     args = parser.parse_args()
     
     assert args.config is not None
@@ -83,7 +83,7 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in args.train_gpu)
     print(args.save_folder)
     if args.new == True:
-        from UPformer.model.UPformer import Net
+        from model.UPformer import Net
         print('model new!')
     save_folder = os.path.join(args.save_folder,'tmp')
     gray_folder = os.path.join(save_folder, 'gray')
@@ -321,12 +321,7 @@ def train(train_loader, model, optimizer, epoch):
         if target.shape[2]!=input.shape[2] or target.shape[3]!=input.shape[3]:
             print("target shape is not equal to input!!!!!",target.shape,input.shape)
             target = F.interpolate(target.unsqueeze(1).float(), size=(h, w), mode='bilinear', align_corners=True).squeeze(1).long()
-        # edge = F.interpolate(edge.unsqueeze(1).float(), size=(h, w), mode='bilinear', align_corners=True).squeeze(1).long()
-        
-        
-        # target = torch.where(target > 0.5, torch.full_like(target, 1), torch.full_like(target, 0))
-        # edge = torch.where(edge > 127, torch.full_like(edge, 255), torch.full_like(edge, 0))
-        
+
         
         
         input = input.cuda(non_blocking=True)
