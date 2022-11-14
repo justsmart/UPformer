@@ -10,7 +10,7 @@ TRAIN:
   cacheBatchSize: 16
   arch: UPformer
   layers: 50
-  sync_bn: True  # adopt sync_bn or not
+  sync_bn: False  # adopt sync_bn or not
   train_h: 353
   train_w: 353
   scale_min: 0.5  # minimum random scale
@@ -50,7 +50,6 @@ Distributed: # Distributed is unavailable
   loss_scale:
 
 TEST:
-  test_list:  ../data/test.list
   split: test  # split in [train, val and test]
   base_size: 353  # based size for scaling
   test_h: 353

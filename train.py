@@ -118,14 +118,8 @@ def main_worker(gpu, ngpus_per_node, argss, gray_folder,Net):
     
     global args
     args = argss
-    if args.sync_bn:
-        if args.multiprocessing_distributed:
-            BatchNorm = apex.parallel.SyncBatchNorm
-        else:
-            from lib.sync_bn.modules import BatchNorm2d
-            BatchNorm = BatchNorm2d
-    else:
-        BatchNorm = nn.BatchNorm2d
+    
+    BatchNorm = nn.BatchNorm2d
     if args.distributed:
         if args.dist_url == "env://" and args.rank == -1:
             args.rank = int(os.environ["RANK"])
