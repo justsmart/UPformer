@@ -1,3 +1,6 @@
+# This code is inspired by: https://github.com/fanyang587/UGTR
+#####
+
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -139,7 +142,7 @@ class Net(nn.Module):
         mean3 = prob_out2.mean(dim=1, keepdim=True)
         std3 = prob_out2.var(dim=1, keepdim=True)
 
-        # step3. position encoding and gmm encoding
+
         x, mask = mask_from_tensor(x)
 
         position_encoding = self.position_encoding(x, mask).to(x.device)
@@ -150,7 +153,6 @@ class Net(nn.Module):
         # print(x.shape)
         m = self.m_items.transpose(0,1).unsqueeze(0).repeat(x.size(0),1,1).unsqueeze(2)
 
-        # position_encoding = torch.bmm(position_encoding.flatten(2), z_).unsqueeze(2)
         m_pos=self.m_pos.repeat(x.size(0), 1, 1, 1).to(m.device)
         # transformer
         # ''' #if not use transformer , remove it !
@@ -169,7 +171,7 @@ class Net(nn.Module):
 
         # if x.size(1) == 1:
 
-        x = self.pred(x)  # out:[1, 1, 60, 60] # ori
+        x = self.pred(x)  
 
         #
 

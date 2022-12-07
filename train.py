@@ -128,7 +128,7 @@ def main_worker(gpu, ngpus_per_node, argss, gray_folder,Net):
         dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url, world_size=args.world_size, rank=args.rank)
 
     # criterion = nn.CrossEntropyLoss(ignore_index=args.ignore_label)
-    #criterion = structure_loss
+
     criterion = nn.BCEWithLogitsLoss(reduction='mean')
     if args.arch == 'UPformer':
         
@@ -267,13 +267,7 @@ def main_worker(gpu, ngpus_per_node, argss, gray_folder,Net):
             logger.info('Saving checkpoint to: ' + filename)
             torch.save({'epoch': epoch_log, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}, filename)
 
-            # if epoch_log / args.save_freq > 2:
-            #     deletename = args.save_path + '/' + date_str + '/train_epoch_' + str(epoch_log - args.save_freq * 2) + '.pth'
-            #     try:
-            #         if os.path.exists(deletename):
-            #             os.remove(deletename)
-            #     except IOError:
-            #         logger.info('error')
+
         scheduler.step()
     f=open(os.path.join(args.save_path + '/' + date_str,'result.txt'),'a')
 
@@ -287,9 +281,7 @@ def train(train_loader, model, optimizer, epoch):
     main_loss_meter = AverageMeter()
     #aux_loss_meter = AverageMeter()
     loss_meter = AverageMeter()
-    intersection_meter = AverageMeter()
-    union_meter = AverageMeter()
-    target_meter = AverageMeter()
+
 
     visual = False
     if visual:
@@ -320,12 +312,8 @@ def train(train_loader, model, optimizer, epoch):
         
         input = input.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
-        # edge = edge.cuda(non_blocking=True)
 
-        # target = target.float() / 255.
-        # edge = edge.unsqueeze(1).float() / 255.
-        # print(input.shape,target.shape)
-        region, main_loss = model(input, target)
+        _, main_loss = model(input, target)
 
         if not args.multiprocessing_distributed:
             main_loss = torch.mean(main_loss)
@@ -422,7 +410,6 @@ def validate(val_loader, model, gray_folder):
         logger.info('<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<')
 
     return {"mae":mae.avg,"dice":dice.avg}
-
 
 
 if __name__ == '__main__':

@@ -1,3 +1,7 @@
+# This code is inspired by: https://github.com/cvlab-yonsei/MNAD.
+#####
+
+
 import torch
 import torch.autograd as ag
 import torch.nn as nn

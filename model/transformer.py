@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+
 """
 DETR Transformer class.
 
@@ -50,37 +50,30 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
-    # def forward(self, src, mask, query_embed, pos_embed, fea):
+    
     def forward(self, src, fea, pos_embed):
 
-        # flatten NxCxHxW to HWxNxC
+        
         bs, c, h, w = src.shape
         src = src.flatten(2).permute(2, 0, 1)
         pos_embed = pos_embed.flatten(2).permute(2, 0, 1)
-        # query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
-        # mask = mask.flatten(1).to(torch.uint8)
-
         tgt = fea.view(bs, c, -1).permute(2, 0, 1)
-        # if self.training:
-        #    mask = np.random.randint(0, tgt.shape[0], int(0.1*tgt.shape[0]))
-        #    tgt[mask] = 0.
-        # tgt = torch.zeros_like(query_embed)
 
-        ####### this is UGT ,if not use UGT ,select one from two
-        # ''' #use UGT
+        ####### this is unc ,if not use unc,select one from two
+        # ''' #use unc
         memory, pos_embed = self.encoder(src, src_key_padding_mask=None, pos=pos_embed)
-        hs, vis_att = self.decoder(tgt, memory, memory_key_padding_mask=None,
+        H, vis_att = self.decoder(tgt, memory, memory_key_padding_mask=None,
                                    pos=pos_embed, query_pos=None)
         loss = self.loss(memory)
         # '''
-        ''' #not use UGT
-        hs,vis_att = self.decoder(tgt, src, memory_key_padding_mask=None,
+        ''' #not use unc
+        H,vis_att = self.decoder(tgt, src, memory_key_padding_mask=None,
                           pos=pos_embed, query_pos=None)
         loss= 0
         '''
         ########
-        n, _, _, _ = hs.shape
-        return hs.transpose(2, 3).permute(3, 0, 1, 2).transpose(2, 3).view(bs, n, c, fea.size(2), fea.size(2)).squeeze(
+        n, _, _, _ = H.shape
+        return H.transpose(2, 3).permute(3, 0, 1, 2).transpose(2, 3).view(bs, n, c, fea.size(2), fea.size(2)).squeeze(
             1), loss, vis_att
 
 
