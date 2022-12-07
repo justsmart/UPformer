@@ -1,5 +1,5 @@
 DATA:
-  test_root:  ../indusData/TestDataset #../indusData/TestDataset  or dataset/TestDataset
+  test_root:  ../indusData/TestDataset #../indusData/TestDataset 
   train_root: ../indusData/TrainDataset
   classes: 1
   new: True
